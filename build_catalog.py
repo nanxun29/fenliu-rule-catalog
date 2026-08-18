@@ -13,6 +13,7 @@ import re
 import subprocess
 import tarfile
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import quote
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -22,6 +23,8 @@ APP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
 DOMAIN_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$")
 MAX_APPS = 1024
 MAX_RULES_PER_APP = 4096
+MAX_ICON_SIZE = 64 * 1024
+ICON_WORKERS = 12
 
 
 @dataclass
@@ -116,6 +119,38 @@ def slug_id(value: str) -> str:
     return result[:32]
 
 
+def read_display_name(directory: Path) -> str:
+    readme = directory / "README.md"
+    if readme.is_file():
+        for line in readme.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.startswith("# "):
+                title = re.sub(r"^[^\w]+", "", line[2:].strip(), flags=re.UNICODE).strip()
+                if title:
+                    return title[:64]
+    return directory.name[:64]
+
+
+def representative_domain(rules: Rules) -> str | None:
+    if not rules.domains:
+        return None
+    return min(rules.domains, key=lambda value: (value.count("."), len(value), value))
+
+
+def valid_png(data: bytes) -> bool:
+    return 32 <= len(data) <= MAX_ICON_SIZE and data.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def fetch_icon(domain: str) -> bytes | None:
+    url = "https://www.google.com/s2/favicons?domain=" + quote(domain, safe=".-") + "&sz=64"
+    try:
+        request = urllib.request.Request(url, headers={"User-Agent": "fenliu-catalog-builder/1"})
+        with urllib.request.urlopen(request, timeout=8) as response:
+            data = response.read(MAX_ICON_SIZE + 1)
+        return data if valid_png(data) else None
+    except (OSError, ValueError):
+        return None
+
+
 def discover_clash_apps(root: Path, raw_base: str) -> list[dict]:
     """Discover compatible application rule files from a checked-out Clash tree.
 
@@ -163,9 +198,11 @@ def discover_clash_apps(root: Path, raw_base: str) -> list[dict]:
             continue
         relative = [path.relative_to(root).as_posix() for path in selected]
         category = selected[0].relative_to(root).parts[0] if len(selected[0].relative_to(root).parts) > 2 else "other"
+        source_name = selected[0].parent.name
         apps.append({
             "id": app_id,
-            "name": selected[0].stem,
+            "name": read_display_name(selected[0].parent),
+            "source_name": source_name,
             "category": category.lower(),
             "sources": [
                 {
@@ -228,6 +265,11 @@ def build(args: argparse.Namespace) -> None:
     if upstream_root:
         discovery = config.get("discovery", {})
         apps = discover_clash_apps(Path(upstream_root), str(discovery.get("raw_base", "")))
+        # Keep the complete upstream application set, then append explicitly
+        # curated sources that are not maintained as standalone upstream apps.
+        # Curated entries are still validated and fingerprinted like any other
+        # application, so they cannot silently bypass release checks.
+        apps.extend(config.get("apps", []))
     else:
         apps = config.get("apps", [])
     if not 0 < len(apps) <= MAX_APPS:
@@ -238,6 +280,13 @@ def build(args: argparse.Namespace) -> None:
     manifest_apps: list[dict] = []
     seen_ids: set[str] = set()
     cache_dir = args.cache_dir.resolve() if args.cache_dir else None
+    previous = getattr(args, "previous", None)
+    previous_icons = previous.resolve() / "icons" if previous else None
+    icon_overrides = {}
+    icon_override_path = getattr(args, "icon_overrides", None)
+    if icon_override_path and icon_override_path.is_file():
+        override_data = json.loads(icon_override_path.read_text(encoding="utf-8"))
+        icon_overrides = override_data.get("domains", {})
 
     for app in apps:
         app_id = app["id"]
@@ -247,6 +296,10 @@ def build(args: argparse.Namespace) -> None:
         rules = Rules()
         source_rows = []
         for index, source in enumerate(app.get("sources", [])):
+            source = dict(source)
+            source_path = source.get("path")
+            if source_path and not Path(source_path).is_absolute():
+                source["path"] = str(config_path.parent / source_path)
             parser = PARSERS.get(source.get("type"))
             if parser is None:
                 raise ValueError(f"unsupported source type for {app_id}: {source.get('type')}")
@@ -264,11 +317,40 @@ def build(args: argparse.Namespace) -> None:
         manifest_apps.append({
             "id": app_id,
             "name": str(app["name"]),
+            "source_name": str(app.get("source_name", app["name"])),
             "category": str(app.get("category", "other")),
             "domains": len(rules.domains),
             "cidr4": len(rules.cidr4),
             "cidr6": len(rules.cidr6),
         })
+
+    icon_data: dict[str, bytes] = {}
+    icon_domains: dict[str, str] = {}
+    pending: dict[object, str] = {}
+    enable_icons = bool(getattr(args, "upstream_root", None) or getattr(args, "icon_overrides", None))
+    with ThreadPoolExecutor(max_workers=ICON_WORKERS) as executor:
+      if enable_icons:
+        for app_id, rules in app_rules.items():
+            previous_icon = previous_icons / f"{app_id}.png" if previous_icons else None
+            if not getattr(args, "refresh_icons", False) and previous_icon and previous_icon.is_file():
+                data = previous_icon.read_bytes()
+                if valid_png(data):
+                    icon_data[app_id] = data
+                    continue
+            domain = str(icon_overrides.get(app_id) or representative_domain(rules) or "").strip().lower()
+            if domain:
+                icon_domains[app_id] = domain
+                pending[executor.submit(fetch_icon, domain)] = app_id
+        for future in as_completed(pending):
+            app_id = pending[future]
+            data = future.result()
+            if data is not None:
+                icon_data[app_id] = data
+
+    manifest_by_id = {item["id"]: item for item in manifest_apps}
+    for app_id, data in icon_data.items():
+        manifest_by_id[app_id]["icon"] = f"icons/{app_id}.png"
+        manifest_by_id[app_id]["icon_sha256"] = hashlib.sha256(data).hexdigest()
 
     files = {f"apps/{app_id}.conf": app_conf(rules) for app_id, rules in app_rules.items()}
     files["sources.json"] = (json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
@@ -277,7 +359,7 @@ def build(args: argparse.Namespace) -> None:
         "schema": 1,
         "version": args.version,
         "generated_at": args.generated_at,
-        "min_plugin_version": "0.1.0-r10",
+        "min_plugin_version": "0.1.0-r13",
         "archive": {
             "file": "catalog.tar.gz",
             "size": len(archive),
@@ -288,6 +370,13 @@ def build(args: argparse.Namespace) -> None:
 
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
+    icon_output = output / "icons"
+    if icon_output.exists():
+        for path in icon_output.glob("*.png"):
+            path.unlink()
+    icon_output.mkdir(exist_ok=True)
+    for app_id, data in icon_data.items():
+        (icon_output / f"{app_id}.png").write_bytes(data)
     manifest_path = output / "manifest.json"
     (output / "catalog.tar.gz").write_bytes(archive)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -299,7 +388,7 @@ def build(args: argparse.Namespace) -> None:
             "usign", "-S", "-m", str(manifest_path), "-s", str(args.secret_key.resolve()),
             "-x", str(signature_path),
         ], check=True)
-    print(json.dumps({"output": str(output), "version": args.version, "apps": len(apps), "archive_size": len(archive)}))
+    print(json.dumps({"output": str(output), "version": args.version, "apps": len(apps), "icons": len(icon_data), "archive_size": len(archive)}))
 
 
 def parse_args() -> argparse.Namespace:
@@ -311,6 +400,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cache-dir", type=Path)
     parser.add_argument("--secret-key", type=Path)
     parser.add_argument("--upstream-root", type=Path)
+    parser.add_argument("--previous", type=Path)
+    parser.add_argument("--icon-overrides", type=Path, default=Path(__file__).with_name("icon-overrides.json"))
+    parser.add_argument("--refresh-icons", action="store_true")
     args = parser.parse_args()
     if not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}\.\d+", args.version):
         parser.error("--version must match YYYY.MM.DD.N")

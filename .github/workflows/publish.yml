@@ -13,6 +13,11 @@ on:
         required: false
         default: false
         type: boolean
+      refresh_icons:
+        description: Refresh all cached application icons
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -79,6 +84,9 @@ jobs:
             mkdir -p previous/stable
             git show origin/catalog:stable/manifest.json > previous/stable/manifest.json
             git show origin/catalog:stable/catalog.tar.gz > previous/stable/catalog.tar.gz
+            if git ls-tree -d --name-only origin/catalog stable/icons | grep -Fxq stable/icons; then
+              git archive --format=tar origin/catalog stable/icons | tar -xf - -C previous
+            fi
             echo "path=previous/stable" >> "$GITHUB_OUTPUT"
           else
             echo "path=" >> "$GITHUB_OUTPUT"
@@ -91,7 +99,10 @@ jobs:
           set -euo pipefail
           version="$(TZ=Asia/Shanghai date +%Y.%m.%d).${GITHUB_RUN_NUMBER}"
           generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          python build_catalog.py --output dist/stable --version "$version" --generated-at "$generated_at" --upstream-root "$UPSTREAM_ROOT"
+          args=(--output dist/stable --version "$version" --generated-at "$generated_at" --upstream-root "$UPSTREAM_ROOT")
+          if [[ -n "${{ steps.previous.outputs.path }}" ]]; then args+=(--previous "${{ steps.previous.outputs.path }}"); fi
+          if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.refresh_icons || false }}" == "true" ]]; then args+=(--refresh-icons); fi
+          python build_catalog.py "${args[@]}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Validate candidate and compare changes
@@ -120,7 +131,7 @@ jobs:
 
       - name: Record unchanged catalog
         if: github.event_name != 'pull_request' && steps.validate.outputs.archive_changed == 'false'
-        run: echo "Upstream rules are unchanged; signing and publishing are skipped."
+        run: echo "Rules, names, and icons are unchanged; signing and publishing are skipped."
 
       - name: Sign and verify release
         if: github.event_name != 'pull_request' && steps.validate.outputs.archive_changed == 'true'

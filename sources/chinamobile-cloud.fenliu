@@ -1,0 +1,9 @@
+# Curated Fenliu rules for China Mobile Cloud (和彩云).
+# The upstream ios_rule_script catalog has only a broad ChinaMobile entry;
+# keep this narrower application separate so users can choose it independently.
+domain:139.com
+domain:yun.139.com
+domain:mcloud.139.com
+domain:caiyun.139.com
+domain:caiyunapp.com
+domain:mcloudglobal.com

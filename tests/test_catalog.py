@@ -147,6 +147,43 @@ class CatalogTest(unittest.TestCase):
         with self.assertRaisesRegex(validate_release.ValidationError, "domain count mismatch"):
             validate_release.validate_release(release)
 
+    def test_readme_heading_is_used_as_display_name(self) -> None:
+        directory = self.root / "CloudApp"
+        directory.mkdir()
+        (directory / "README.md").write_text("# 🧰 中国移动云盘\n", encoding="utf-8")
+        self.assertEqual(build_catalog.read_display_name(directory), "中国移动云盘")
+
+    def test_curated_relative_source_and_metadata(self) -> None:
+        source = self.root / "curated.fenliu"
+        source.write_text("domain:yun.139.com\ndomain:caiyunapp.com\n", encoding="utf-8")
+        config = self.root / "curated.json"
+        config.write_text(json.dumps({
+            "schema": 1,
+            "apps": [{
+                "id": "chinamobile-cloud",
+                "name": "中国移动云盘",
+                "source_name": "和彩云",
+                "category": "cloud",
+                "sources": [{"type": "fenliu", "path": source.name}],
+            }],
+        }, ensure_ascii=False), encoding="utf-8")
+        release = self.build_catalog_from_config(config, "curated")
+        manifest = json.loads((release / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["apps"][0]["source_name"], "和彩云")
+        self.assertEqual(manifest["apps"][0]["domains"], 2)
+
+    def build_catalog_from_config(self, config: Path, name: str) -> Path:
+        output = self.root / name
+        build_catalog.build(argparse.Namespace(
+            config=config,
+            output=output,
+            version="2026.08.18.3",
+            generated_at="2026-08-18T03:17:00Z",
+            cache_dir=None,
+            secret_key=None,
+        ))
+        return output
+
 
 class WorkflowContractTest(unittest.TestCase):
     def test_workflow_security_and_schedule_contract(self) -> None:

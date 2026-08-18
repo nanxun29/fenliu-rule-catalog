@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "domains": {
+    "12306": "12306.cn",
+    "360": "360.cn",
+    "alibaba": "alibaba.com",
+    "alipay": "alipay.com",
+    "baidu": "baidu.com",
+    "chinamobile-cloud": "caiyun.139.com",
+    "bilibili": "bilibili.com",
+    "douyin": "douyin.com",
+    "github": "github.com",
+    "google": "google.com",
+    "jd": "jd.com",
+    "netflix": "netflix.com",
+    "qq": "qq.com",
+    "spotify": "spotify.com",
+    "telegram": "telegram.org",
+    "tiktok": "tiktok.com",
+    "wechat": "weixin.qq.com",
+    "weibo": "weibo.com",
+    "xiaohongshu": "xiaohongshu.com",
+    "youtube": "youtube.com"
+  }
+}

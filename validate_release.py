@@ -25,6 +25,8 @@ MAX_ARCHIVE_SIZE = 16 * 1024 * 1024
 MAX_MANIFEST_SIZE = 1024 * 1024
 MAX_MEMBER_SIZE = 4 * 1024 * 1024
 MAX_TOTAL_UNPACKED_SIZE = 32 * 1024 * 1024
+MAX_ICON_SIZE = 64 * 1024
+MAX_TOTAL_ICON_SIZE = 16 * 1024 * 1024
 
 
 class ValidationError(ValueError):
@@ -48,6 +50,7 @@ class Release:
     manifest: dict[str, Any]
     apps: dict[str, AppRules]
     archive_sha256: str
+    release_fingerprint: str
 
 
 def require(condition: bool, message: str) -> None:
@@ -148,10 +151,18 @@ def validate_manifest(data: Any) -> list[dict[str, Any]]:
         require(app_id not in ids, f"duplicate app id: {app_id}")
         ids.append(app_id)
         require(isinstance(app.get("name"), str) and bool(app["name"].strip()), f"{app_id}: invalid name")
+        require(len(app["name"]) <= 64, f"{app_id}: name is too long")
+        source_name = app.get("source_name")
+        require(isinstance(source_name, str) and bool(source_name.strip()) and len(source_name) <= 64, f"{app_id}: invalid source_name")
         require(isinstance(app.get("category"), str) and bool(app["category"].strip()), f"{app_id}: invalid category")
         for key in ("domains", "cidr4", "cidr6"):
             require(type(app.get(key)) is int and app[key] >= 0, f"{app_id}: invalid {key} count")
         require(sum(app[key] for key in ("domains", "cidr4", "cidr6")) > 0, f"{app_id}: empty app")
+        icon = app.get("icon")
+        icon_sha256 = app.get("icon_sha256")
+        if icon is not None or icon_sha256 is not None:
+            require(icon == f"icons/{app_id}.png", f"{app_id}: invalid icon path")
+            require(isinstance(icon_sha256, str) and bool(re.fullmatch(r"[0-9a-f]{64}", icon_sha256)), f"{app_id}: invalid icon sha256")
     require(ids == sorted(ids), "manifest apps must be sorted by id")
     return apps
 
@@ -248,7 +259,30 @@ def validate_release(path: Path, public_key: Path | None = None, require_signatu
         require(len(rules.domains) == row["domains"], f"{app_id}: domain count mismatch")
         require(len(rules.cidr4) == row["cidr4"], f"{app_id}: cidr4 count mismatch")
         require(len(rules.cidr6) == row["cidr6"], f"{app_id}: cidr6 count mismatch")
-    return Release(path=path, manifest=manifest, apps=parsed, archive_sha256=archive_sha256)
+
+    expected_icons = {app["icon"]: app for app in manifest_apps if app.get("icon")}
+    icon_dir = path / "icons"
+    actual_icons = set()
+    total_icon_size = 0
+    if icon_dir.is_dir():
+        for icon_path in icon_dir.iterdir():
+            require(icon_path.is_file() and icon_path.suffix == ".png", f"unexpected icon asset: {icon_path.name}")
+            relative = f"icons/{icon_path.name}"
+            actual_icons.add(relative)
+            require(relative in expected_icons, f"orphan icon asset: {relative}")
+            data = icon_path.read_bytes()
+            require(32 <= len(data) <= MAX_ICON_SIZE, f"{relative}: invalid icon size")
+            require(data.startswith(b"\x89PNG\r\n\x1a\n"), f"{relative}: icon must be PNG")
+            require(hashlib.sha256(data).hexdigest() == expected_icons[relative]["icon_sha256"], f"{relative}: icon sha256 mismatch")
+            total_icon_size += len(data)
+            require(total_icon_size <= MAX_TOTAL_ICON_SIZE, "icons exceed total size limit")
+    require(actual_icons == set(expected_icons), "manifest icon set does not match icon assets")
+    release_data = {
+        "archive_sha256": archive_sha256,
+        "apps": manifest_apps,
+    }
+    release_fingerprint = hashlib.sha256(json.dumps(release_data, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    return Release(path=path, manifest=manifest, apps=parsed, archive_sha256=archive_sha256, release_fingerprint=release_fingerprint)
 
 
 def percent_change(old: int, new: int) -> float:
@@ -336,7 +370,7 @@ def main() -> int:
         if args.previous:
             previous = validate_release(args.previous)
             report["previous_version"] = previous.manifest["version"]
-            report["archive_changed"] = candidate.archive_sha256 != previous.archive_sha256
+            report["archive_changed"] = candidate.release_fingerprint != previous.release_fingerprint
         changes, violations, warnings = compare_releases(candidate, previous, args.allow_large_change)
         report["changes"] = changes
         report["errors"].extend(violations)
