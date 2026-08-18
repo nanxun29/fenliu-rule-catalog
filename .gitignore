@@ -1,0 +1,15 @@
+dist/
+.cache/
+.test-tmp/
+.publish-artifact/
+previous/
+__pycache__/
+*.py[cod]
+*.sec
+*.key
+*.pem
+.env
+private/
+secrets/
+candidate-report.json
+candidate-report.md
