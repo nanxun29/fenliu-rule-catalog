@@ -125,7 +125,7 @@ def parse_rules(name: str, data: bytes) -> AppRules:
     return rules
 
 
-def validate_manifest(data: Any) -> list[dict[str, Any]]:
+def validate_manifest(data: Any, *, allow_legacy_metadata: bool = False) -> list[dict[str, Any]]:
     require(isinstance(data, dict), "manifest root must be an object")
     require(data.get("schema") == 1, "manifest schema must be 1")
     require(isinstance(data.get("version"), str) and bool(VERSION_RE.fullmatch(data["version"])), "invalid manifest version")
@@ -153,6 +153,8 @@ def validate_manifest(data: Any) -> list[dict[str, Any]]:
         require(isinstance(app.get("name"), str) and bool(app["name"].strip()), f"{app_id}: invalid name")
         require(len(app["name"]) <= 64, f"{app_id}: name is too long")
         source_name = app.get("source_name")
+        if allow_legacy_metadata and source_name is None:
+            source_name = app.get("name")
         require(isinstance(source_name, str) and bool(source_name.strip()) and len(source_name) <= 64, f"{app_id}: invalid source_name")
         require(isinstance(app.get("category"), str) and bool(app["category"].strip()), f"{app_id}: invalid category")
         for key in ("domains", "cidr4", "cidr6"):
@@ -167,7 +169,13 @@ def validate_manifest(data: Any) -> list[dict[str, Any]]:
     return apps
 
 
-def validate_release(path: Path, public_key: Path | None = None, require_signature: bool = False) -> Release:
+def validate_release(
+    path: Path,
+    public_key: Path | None = None,
+    require_signature: bool = False,
+    *,
+    allow_legacy_metadata: bool = False,
+) -> Release:
     path = path.resolve()
     require(path.is_dir(), f"release directory does not exist: {path}")
     manifest_path = path / "manifest.json"
@@ -177,7 +185,7 @@ def validate_release(path: Path, public_key: Path | None = None, require_signatu
     require(archive_path.is_file(), "catalog.tar.gz is missing")
     require(manifest_path.stat().st_size <= MAX_MANIFEST_SIZE, "manifest.json is too large")
     manifest = load_json(manifest_path)
-    manifest_apps = validate_manifest(manifest)
+    manifest_apps = validate_manifest(manifest, allow_legacy_metadata=allow_legacy_metadata)
 
     archive_data = archive_path.read_bytes()
     require(len(archive_data) == manifest["archive"]["size"], "archive size does not match manifest")
@@ -368,7 +376,7 @@ def main() -> int:
         report["candidate_version"] = candidate.manifest["version"]
         previous = None
         if args.previous:
-            previous = validate_release(args.previous)
+            previous = validate_release(args.previous, allow_legacy_metadata=True)
             report["previous_version"] = previous.manifest["version"]
             report["archive_changed"] = candidate.release_fingerprint != previous.release_fingerprint
         changes, violations, warnings = compare_releases(candidate, previous, args.allow_large_change)

@@ -147,6 +147,18 @@ class CatalogTest(unittest.TestCase):
         with self.assertRaisesRegex(validate_release.ValidationError, "domain count mismatch"):
             validate_release.validate_release(release)
 
+    def test_legacy_previous_manifest_without_source_name_is_accepted(self) -> None:
+        release = self.build("legacy-previous", {"alpha": 5})
+        manifest_path = release / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for app in manifest["apps"]:
+            app.pop("source_name", None)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaisesRegex(validate_release.ValidationError, "invalid source_name"):
+            validate_release.validate_release(release)
+        previous = validate_release.validate_release(release, allow_legacy_metadata=True)
+        self.assertEqual(previous.manifest["apps"][0]["name"], "Alpha")
+
     def test_readme_heading_is_used_as_display_name(self) -> None:
         directory = self.root / "CloudApp"
         directory.mkdir()
