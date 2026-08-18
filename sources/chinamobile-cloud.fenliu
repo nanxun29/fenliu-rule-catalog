@@ -7,3 +7,6 @@ domain:mcloud.139.com
 domain:caiyun.139.com
 domain:caiyunapp.com
 domain:mcloudglobal.com
+# China Mobile Cloud download links use dynamic EOS bucket and region labels,
+# for example *.eos.huhehaote-8.cmecloud.cn.
+domain:cmecloud.cn
