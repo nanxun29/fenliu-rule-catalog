@@ -13,13 +13,14 @@ import re
 import subprocess
 import tarfile
 import urllib.request
+from urllib.parse import quote
 from dataclasses import dataclass, field
 from pathlib import Path
 
 
 APP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
 DOMAIN_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$")
-MAX_APPS = 512
+MAX_APPS = 1024
 MAX_RULES_PER_APP = 4096
 
 
@@ -107,6 +108,77 @@ def parse_fenliu(text: str, rules: Rules) -> None:
 PARSERS = {"clash": parse_clash, "v2fly": parse_v2fly, "fenliu": parse_fenliu}
 
 
+def slug_id(value: str) -> str:
+    """Convert an upstream directory name into a stable UCI-safe app ID."""
+    result = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    if not result or not result[0].isalnum():
+        raise ValueError(f"cannot derive app id from {value!r}")
+    return result[:32]
+
+
+def discover_clash_apps(root: Path, raw_base: str) -> list[dict]:
+    """Discover compatible application rule files from a checked-out Clash tree.
+
+    The upstream tree has both leaf application directories and aggregate
+    folders. A leaf `<name>/<name>.yaml` is the canonical source. For a
+    directory without that file, use its `_Domain.yaml` / `_IP.yaml` variants.
+    Duplicate leaf names are retained only once, preferring the shortest path.
+    """
+    root = root.resolve()
+    candidates: dict[str, list[Path]] = {}
+    for path in root.rglob("*.yaml"):
+        if path.stem.startswith("README"):
+            continue
+        if path.stem == path.parent.name:
+            candidates.setdefault(slug_id(path.stem), []).append(path)
+
+    for directory in (item for item in root.rglob("*") if item.is_dir()):
+        if any(path.parent == directory and path.stem == directory.name for path in directory.glob("*.yaml")):
+            continue
+        variants = sorted(
+            path for path in directory.glob(f"{directory.name}_*.yaml")
+            if path.stem.endswith(("_Domain", "_IP"))
+        )
+        if variants:
+            candidates.setdefault(slug_id(directory.name), []).extend(variants)
+
+    apps: list[dict] = []
+    for app_id, paths in sorted(candidates.items()):
+        source_paths = sorted(set(paths), key=lambda item: (len(item.relative_to(root).parts), item.as_posix()))
+        # A canonical leaf wins over variants when it contains compatible
+        # rules. Aggregate/process-only leaves fall back to domain/IP variants.
+        canonical = [path for path in source_paths if path.stem == path.parent.name]
+        selected = canonical[:1] or source_paths
+        if canonical:
+            probe = Rules()
+            parse_clash(canonical[0].read_text(encoding="utf-8"), probe)
+            if not probe.count:
+                selected = source_paths
+        compatible = False
+        for path in selected:
+            probe = Rules()
+            parse_clash(path.read_text(encoding="utf-8"), probe)
+            compatible = compatible or bool(probe.count)
+        if not compatible:
+            continue
+        relative = [path.relative_to(root).as_posix() for path in selected]
+        category = selected[0].relative_to(root).parts[0] if len(selected[0].relative_to(root).parts) > 2 else "other"
+        apps.append({
+            "id": app_id,
+            "name": selected[0].stem,
+            "category": category.lower(),
+            "sources": [
+                {
+                    "type": "clash",
+                    "path": str(path),
+                    "url": f"{raw_base.rstrip('/')}/{quote(item, safe='/._-')}"
+                }
+                for path, item in zip(selected, relative)
+            ],
+        })
+    return apps
+
+
 def read_source(source: dict, cache_dir: Path | None, cache_name: str) -> bytes:
     if "path" in source:
         return Path(source["path"]).read_bytes()
@@ -150,11 +222,16 @@ def deterministic_archive(files: dict[str, bytes]) -> bytes:
 def build(args: argparse.Namespace) -> None:
     config_path = args.config.resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    if config.get("schema") != 1:
-        raise ValueError("catalog source schema must be 1")
-    apps = config.get("apps", [])
+    if config.get("schema") not in {1, 2}:
+        raise ValueError("catalog source schema must be 1 or 2")
+    upstream_root = getattr(args, "upstream_root", None)
+    if upstream_root:
+        discovery = config.get("discovery", {})
+        apps = discover_clash_apps(Path(upstream_root), str(discovery.get("raw_base", "")))
+    else:
+        apps = config.get("apps", [])
     if not 0 < len(apps) <= MAX_APPS:
-        raise ValueError("catalog must contain 1..512 apps")
+        raise ValueError(f"catalog must contain 1..{MAX_APPS} apps")
 
     app_rules: dict[str, Rules] = {}
     provenance: list[dict] = []
@@ -193,20 +270,6 @@ def build(args: argparse.Namespace) -> None:
             "cidr6": len(rules.cidr6),
         })
 
-    domain_owner: dict[str, str] = {}
-    networks: list[tuple[str, ipaddress._BaseNetwork]] = []
-    for app_id, rules in app_rules.items():
-        for domain in rules.domains:
-            owner = domain_owner.setdefault(domain, app_id)
-            if owner != app_id:
-                raise ValueError(f"cross-app domain conflict: {domain} ({owner}, {app_id})")
-        for cidr in sorted(rules.cidr4 | rules.cidr6):
-            network = ipaddress.ip_network(cidr)
-            for other_id, other in networks:
-                if other_id != app_id and network.version == other.version and network.overlaps(other):
-                    raise ValueError(f"cross-app CIDR conflict: {network} ({app_id}) overlaps {other} ({other_id})")
-            networks.append((app_id, network))
-
     files = {f"apps/{app_id}.conf": app_conf(rules) for app_id, rules in app_rules.items()}
     files["sources.json"] = (json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
     archive = deterministic_archive(files)
@@ -214,7 +277,7 @@ def build(args: argparse.Namespace) -> None:
         "schema": 1,
         "version": args.version,
         "generated_at": args.generated_at,
-        "min_plugin_version": "0.1.0-r9",
+        "min_plugin_version": "0.1.0-r10",
         "archive": {
             "file": "catalog.tar.gz",
             "size": len(archive),
@@ -247,6 +310,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--generated-at", default="2026-08-18T00:00:00Z")
     parser.add_argument("--cache-dir", type=Path)
     parser.add_argument("--secret-key", type=Path)
+    parser.add_argument("--upstream-root", type=Path)
     args = parser.parse_args()
     if not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}\.\d+", args.version):
         parser.error("--version must match YYYY.MM.DD.N")

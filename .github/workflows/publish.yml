@@ -60,6 +60,15 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
 
+      - name: Fetch complete upstream application tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          upstream="$RUNNER_TEMP/ios-rule-script"
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/blackmatrix7/ios_rule_script.git "$upstream"
+          git -C "$upstream" sparse-checkout set rule/Clash
+          echo "UPSTREAM_ROOT=$upstream/rule/Clash" >> "$GITHUB_ENV"
+
       - name: Read previous published release
         id: previous
         shell: bash
@@ -82,7 +91,7 @@ jobs:
           set -euo pipefail
           version="$(TZ=Asia/Shanghai date +%Y.%m.%d).${GITHUB_RUN_NUMBER}"
           generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          python build_catalog.py --output dist/stable --version "$version" --generated-at "$generated_at"
+          python build_catalog.py --output dist/stable --version "$version" --generated-at "$generated_at" --upstream-root "$UPSTREAM_ROOT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Validate candidate and compare changes

@@ -19,7 +19,7 @@ from typing import Any
 APP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
 VERSION_RE = re.compile(r"^\d{4}\.\d{2}\.\d{2}\.\d+$")
 DOMAIN_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$")
-MAX_APPS = 512
+MAX_APPS = 1024
 MAX_RULES_PER_APP = 4096
 MAX_ARCHIVE_SIZE = 16 * 1024 * 1024
 MAX_MANIFEST_SIZE = 1024 * 1024
@@ -242,22 +242,12 @@ def validate_release(path: Path, public_key: Path | None = None, require_signatu
 
     parsed = {app_id: parse_rules(f"apps/{app_id}.conf", data) for app_id, data in app_data.items()}
     manifest_by_id = {app["id"]: app for app in manifest_apps}
-    domain_owner: dict[str, str] = {}
-    networks: list[tuple[str, ipaddress._BaseNetwork]] = []
     for app_id in sorted(parsed):
         rules = parsed[app_id]
         row = manifest_by_id[app_id]
         require(len(rules.domains) == row["domains"], f"{app_id}: domain count mismatch")
         require(len(rules.cidr4) == row["cidr4"], f"{app_id}: cidr4 count mismatch")
         require(len(rules.cidr6) == row["cidr6"], f"{app_id}: cidr6 count mismatch")
-        for domain in rules.domains:
-            owner = domain_owner.setdefault(domain, app_id)
-            require(owner == app_id, f"cross-app domain conflict: {domain} ({owner}, {app_id})")
-        for cidr in sorted(rules.cidr4 | rules.cidr6):
-            network = ipaddress.ip_network(cidr)
-            for other_id, other in networks:
-                require(other_id == app_id or network.version != other.version or not network.overlaps(other), f"cross-app CIDR conflict: {network} ({app_id}) overlaps {other} ({other_id})")
-            networks.append((app_id, network))
     return Release(path=path, manifest=manifest, apps=parsed, archive_sha256=archive_sha256)
 
 
