@@ -1,0 +1,45 @@
+{
+  "apps": [
+    {
+      "category": "video",
+      "cidr4": 0,
+      "cidr6": 0,
+      "domains": 13,
+      "id": "douyin",
+      "name": "抖音"
+    },
+    {
+      "category": "video",
+      "cidr4": 0,
+      "cidr6": 0,
+      "domains": 32,
+      "id": "netflix",
+      "name": "Netflix"
+    },
+    {
+      "category": "social",
+      "cidr4": 0,
+      "cidr6": 0,
+      "domains": 30,
+      "id": "wechat",
+      "name": "微信"
+    },
+    {
+      "category": "video",
+      "cidr4": 2,
+      "cidr6": 1,
+      "domains": 179,
+      "id": "youtube",
+      "name": "YouTube"
+    }
+  ],
+  "archive": {
+    "file": "catalog.tar.gz",
+    "sha256": "4ac0c3536d4027fc621ce4305a29b6a1d955d9d3d2c23f6d83f1872f64e213a8",
+    "size": 1726
+  },
+  "generated_at": "2026-08-18T06:34:11Z",
+  "min_plugin_version": "0.1.0-r9",
+  "schema": 1,
+  "version": "2026.08.18.3"
+}
