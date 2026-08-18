@@ -2152,10 +2152,10 @@
       "source_name": "DouBan"
     },
     {
-      "category": "other",
+      "category": "video",
       "cidr4": 0,
       "cidr6": 0,
-      "domains": 13,
+      "domains": 18,
       "icon": "icons/douyin.png",
       "icon_sha256": "88497ffe773b63cbad1ae07f84167bf25f58b87ddbd1d57b5bbe0fec53493864",
       "id": "douyin",
@@ -5041,6 +5041,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 3,
+      "icon": "icons/scaleflex.png",
+      "icon_sha256": "04fa39de5a365250904e22d8ef62fbc76476a1ae69e207708934f16cc58979df",
       "id": "scaleflex",
       "name": "Scaleflex",
       "source_name": "Scaleflex"
@@ -6728,11 +6730,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "acc3dcfb89bbef8a2b299a4d5c3494f6bafddf3b6fd79efec5f4d4917d05dc97",
-    "size": 196735
+    "sha256": "c5a96f82f6e3edd73eeecb846954cd657b24f287d01159a20faeba75d99e9d7e",
+    "size": 196851
   },
-  "generated_at": "2026-08-18T13:33:24Z",
+  "generated_at": "2026-08-18T17:13:59Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.08.18.10"
+  "version": "2026.08.19.11"
 }
