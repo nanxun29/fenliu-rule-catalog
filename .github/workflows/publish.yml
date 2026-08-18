@@ -39,8 +39,23 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install signature verifier
-        run: sudo apt-get update && sudo apt-get install --yes usign
+      - name: Build pinned OpenWrt signature verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes build-essential cmake
+          usign_source="$RUNNER_TEMP/usign-source"
+          usign_build="$RUNNER_TEMP/usign-build"
+          git init "$usign_source"
+          git -C "$usign_source" remote add origin https://github.com/openwrt/usign.git
+          git -C "$usign_source" fetch --depth 1 origin f1f65026a94137c91b5466b149ef3ea3f20091e9
+          git -C "$usign_source" checkout --detach FETCH_HEAD
+          test "$(git -C "$usign_source" rev-parse HEAD)" = "f1f65026a94137c91b5466b149ef3ea3f20091e9"
+          cmake -S "$usign_source" -B "$usign_build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$usign_build" --parallel 2
+          sudo install -m 0755 "$usign_build/usign" /usr/local/bin/usign
+          test -x /usr/local/bin/usign
 
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
