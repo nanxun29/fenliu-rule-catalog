@@ -2155,7 +2155,7 @@
       "category": "video",
       "cidr4": 0,
       "cidr6": 0,
-      "domains": 18,
+      "domains": 17,
       "icon": "icons/douyin.png",
       "icon_sha256": "88497ffe773b63cbad1ae07f84167bf25f58b87ddbd1d57b5bbe0fec53493864",
       "id": "douyin",
@@ -6730,11 +6730,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "c5a96f82f6e3edd73eeecb846954cd657b24f287d01159a20faeba75d99e9d7e",
-    "size": 196851
+    "sha256": "1305962cdd69d819ec98f5cda023c2767852e917b64750264da1f09fef292235",
+    "size": 196848
   },
-  "generated_at": "2026-08-18T17:13:59Z",
+  "generated_at": "2026-08-18T17:33:55Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.08.19.11"
+  "version": "2026.08.19.12"
 }
