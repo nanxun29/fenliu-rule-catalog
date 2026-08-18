@@ -265,11 +265,22 @@ def build(args: argparse.Namespace) -> None:
     if upstream_root:
         discovery = config.get("discovery", {})
         apps = discover_clash_apps(Path(upstream_root), str(discovery.get("raw_base", "")))
-        # Keep the complete upstream application set, then append explicitly
-        # curated sources that are not maintained as standalone upstream apps.
-        # Curated entries are still validated and fingerprinted like any other
-        # application, so they cannot silently bypass release checks.
-        apps.extend(config.get("apps", []))
+        # Keep the complete upstream application set, then merge explicitly
+        # curated sources into matching applications. This lets the repository
+        # carry a small, reviewed supplement for an upstream app without
+        # creating a duplicate app ID or a separate user-facing entry.
+        discovered = {app["id"]: app for app in apps}
+        for curated in config.get("apps", []):
+            existing = discovered.get(curated.get("id"))
+            if existing is None:
+                apps.append(curated)
+                discovered[curated["id"]] = curated
+                continue
+            existing.setdefault("sources", []).extend(curated.get("sources", []))
+            if curated.get("name") and not existing.get("name"):
+                existing["name"] = curated["name"]
+            if curated.get("category") and existing.get("category") in {None, "other"}:
+                existing["category"] = curated["category"]
     else:
         apps = config.get("apps", [])
     if not 0 < len(apps) <= MAX_APPS:

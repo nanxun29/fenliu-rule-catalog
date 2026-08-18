@@ -9,6 +9,19 @@
   },
   "apps": [
     {
+      "id": "douyin",
+      "name": "抖音",
+      "source_name": "Fenliu 直播补充规则",
+      "category": "video",
+      "sources": [
+        {
+          "type": "fenliu",
+          "path": "sources/douyin-extra.fenliu",
+          "url": "https://raw.githubusercontent.com/nanxun29/fenliu-rule-catalog/main/sources/douyin-extra.fenliu"
+        }
+      ]
+    },
+    {
       "id": "chinamobile-cloud",
       "name": "中国移动云盘",
       "source_name": "和彩云（中国移动云盘）",

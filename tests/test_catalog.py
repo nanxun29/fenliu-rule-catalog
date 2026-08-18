@@ -9,6 +9,7 @@ import sys
 import tarfile
 import unittest
 import uuid
+from unittest import mock
 from pathlib import Path
 
 
@@ -183,6 +184,42 @@ class CatalogTest(unittest.TestCase):
         manifest = json.loads((release / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["apps"][0]["source_name"], "和彩云")
         self.assertEqual(manifest["apps"][0]["domains"], 2)
+
+    def test_curated_source_merges_into_discovered_app(self) -> None:
+        source = self.root / "supplement.fenliu"
+        source.write_text("domain:extra.example.com\n", encoding="utf-8")
+        config = self.root / "merge.json"
+        config.write_text(json.dumps({
+            "schema": 2,
+            "discovery": {"type": "test"},
+            "apps": [{
+                "id": "douyin",
+                "name": "抖音补充",
+                "sources": [{"type": "fenliu", "path": source.name}],
+            }],
+        }, ensure_ascii=False), encoding="utf-8")
+        discovered = [{
+            "id": "douyin",
+            "name": "DouYin",
+            "source_name": "DouYin",
+            "category": "video",
+            "sources": [{"type": "fenliu", "path": str(source)}],
+        }]
+        with mock.patch.object(build_catalog, "discover_clash_apps", return_value=discovered):
+            output = self.root / "merged"
+            build_catalog.build(argparse.Namespace(
+                config=config,
+                output=output,
+                version="2026.08.18.4",
+                generated_at="2026-08-18T03:17:00Z",
+                cache_dir=None,
+                secret_key=None,
+                upstream_root=self.root,
+            ))
+        manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(manifest["apps"]), 1)
+        self.assertEqual(manifest["apps"][0]["id"], "douyin")
+        self.assertEqual(manifest["apps"][0]["domains"], 1)
 
     def build_catalog_from_config(self, config: Path, name: str) -> Path:
         output = self.root / name
