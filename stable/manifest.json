@@ -1479,7 +1479,7 @@
       "category": "cloud",
       "cidr4": 0,
       "cidr6": 0,
-      "domains": 6,
+      "domains": 7,
       "id": "chinamobile-cloud",
       "name": "中国移动云盘",
       "source_name": "和彩云（中国移动云盘）"
@@ -6730,11 +6730,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "1305962cdd69d819ec98f5cda023c2767852e917b64750264da1f09fef292235",
-    "size": 196848
+    "sha256": "53c5ee9dab814046ae9cfe6dda5f86090e018f2b0fc4749cef655e69283998a2",
+    "size": 196850
   },
-  "generated_at": "2026-08-18T17:33:55Z",
+  "generated_at": "2026-08-18T20:18:32Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.08.19.12"
+  "version": "2026.08.19.13"
 }
