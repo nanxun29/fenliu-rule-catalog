@@ -2575,6 +2575,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 2,
+      "icon": "icons/friday.png",
+      "icon_sha256": "9cd667d71258e1f2c6e44faa6553e2bc50c9c977e256e46029f58c3c722d46c2",
       "id": "friday",
       "name": "friDay",
       "source_name": "friDay"
@@ -6730,11 +6732,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "53c5ee9dab814046ae9cfe6dda5f86090e018f2b0fc4749cef655e69283998a2",
-    "size": 196850
+    "sha256": "4f2ba4f2586397c8b65279b60999764612b840f3f8025b23304d38c52fa19b5a",
+    "size": 196854
   },
-  "generated_at": "2026-08-18T20:18:32Z",
+  "generated_at": "2026-08-20T03:57:38Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.08.19.13"
+  "version": "2026.08.20.15"
 }
