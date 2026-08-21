@@ -1909,6 +1909,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 8,
+      "icon": "icons/dedao.png",
+      "icon_sha256": "e1174d5c4d08086d41924dc3e013a18c0cc78ddb9b32a80402bec032aa5d724c",
       "id": "dedao",
       "name": "得到",
       "source_name": "Dedao"
@@ -2147,6 +2149,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 3,
+      "icon": "icons/douban.png",
+      "icon_sha256": "92c260d5edef2f50990b4f1b504760904a2833f6d6fa49e8ceae5360b1383ac0",
       "id": "douban",
       "name": "豆瓣",
       "source_name": "DouBan"
@@ -3581,6 +3585,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 5,
+      "icon": "icons/keep.png",
+      "icon_sha256": "4e0df700ae4e3a2efbbe372e376ab320452003d11625d74c5c78c9d55b6d15b2",
       "id": "keep",
       "name": "Keep",
       "source_name": "Keep"
@@ -6629,6 +6635,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 1,
+      "icon": "icons/zhanqi.png",
+      "icon_sha256": "ac8d882db2f945d2fee0520566c040bebe4ec33e61f35667ebe79e693e6880c4",
       "id": "zhanqi",
       "name": "战旗",
       "source_name": "zhanqi"
@@ -6735,8 +6743,8 @@
     "sha256": "4f2ba4f2586397c8b65279b60999764612b840f3f8025b23304d38c52fa19b5a",
     "size": 196854
   },
-  "generated_at": "2026-08-20T03:57:38Z",
+  "generated_at": "2026-08-21T03:59:46Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.08.20.15"
+  "version": "2026.08.21.16"
 }
