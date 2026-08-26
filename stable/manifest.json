@@ -6750,11 +6750,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "f839ffaa0d24993e1801fc07b8a70ef04986f984cdfe7225bf0a715d36409e30",
-    "size": 196848
+    "sha256": "2e2e71ff0bc76fefe1ccd7c1fb86da999d79a9689335d3f6e6958e84a1599d78",
+    "size": 196850
   },
-  "generated_at": "2026-08-24T04:03:32Z",
+  "generated_at": "2026-08-26T04:01:34Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.08.24.19"
+  "version": "2026.08.26.21"
 }
