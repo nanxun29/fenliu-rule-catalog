@@ -4230,6 +4230,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 22,
+      "icon": "icons/nbc.png",
+      "icon_sha256": "ba6e2d35cc14d4b53c43b821dfeb7870df46644cf23f35c6eb0089af54c0f785",
       "id": "nbc",
       "name": "NBC",
       "source_name": "NBC"
@@ -6752,11 +6754,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "f63106228c80c8272f3ec9f3a55f3727dd2cf304265be82a93590d9eb40b8afc",
-    "size": 196846
+    "sha256": "c2a9ace867cb49cecff6b6419b7d580b7dcdf8ca09951052c0c319be1a49b53e",
+    "size": 196849
   },
-  "generated_at": "2026-09-02T07:52:33Z",
+  "generated_at": "2026-09-04T07:56:30Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.09.02.28"
+  "version": "2026.09.04.30"
 }
