@@ -1470,7 +1470,7 @@
       "category": "other",
       "cidr4": 1,
       "cidr6": 0,
-      "domains": 35,
+      "domains": 37,
       "icon": "icons/chinamobile.png",
       "icon_sha256": "a9f7942c741c8fe292de14abc987b9db41a51c10ee0aa1163fd44348a9ad7ec5",
       "id": "chinamobile",
@@ -6754,11 +6754,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "63ad716bd3fc02458d7a5097467b380e9d18cfbb91b18f75b4c9d7b4075af7ba",
-    "size": 196849
+    "sha256": "308c897c07439b6cd4d3b7f2f2c8c73735b709bc1738feba24b8fb1a572fa0f7",
+    "size": 196851
   },
-  "generated_at": "2026-09-20T08:31:49Z",
+  "generated_at": "2026-09-22T08:29:41Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.09.20.46"
+  "version": "2026.09.22.48"
 }
