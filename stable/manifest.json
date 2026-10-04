@@ -1300,7 +1300,7 @@
       "category": "other",
       "cidr4": 1,
       "cidr6": 0,
-      "domains": 369,
+      "domains": 370,
       "id": "bytedance",
       "name": "字节跳动",
       "source_name": "ByteDance"
@@ -4841,7 +4841,7 @@
       "category": "other",
       "cidr4": 89,
       "cidr6": 4,
-      "domains": 872,
+      "domains": 874,
       "id": "proxylite",
       "name": "ProxyLite",
       "source_name": "ProxyLite"
@@ -6756,11 +6756,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "a109fb409af8e8f10cafa40cb9ae9b2edc5b8c3e3ae48c16c5cabb951e1beb69",
-    "size": 196986
+    "sha256": "a259593ad52820f71ec44a1ab397225db4846b11ee353c51d9c4b5d3e323d283",
+    "size": 196997
   },
-  "generated_at": "2026-10-03T09:05:54Z",
+  "generated_at": "2026-10-04T09:43:01Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.03.59"
+  "version": "2026.10.04.60"
 }
