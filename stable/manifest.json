@@ -5206,7 +5206,7 @@
       "category": "other",
       "cidr4": 0,
       "cidr6": 0,
-      "domains": 12,
+      "domains": 13,
       "id": "skygo",
       "name": "SkyGO",
       "source_name": "SkyGO"
@@ -6756,11 +6756,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "958e2cd83256553ff8bc061076859d3e9d6cb5faaa09d8130a4e3a6b019350cb",
-    "size": 196990
+    "sha256": "0c0048377f33f07eaec38adfbcc84879390e8153d59f1f0b3c773c5ba50ee2ac",
+    "size": 196998
   },
-  "generated_at": "2026-10-06T10:12:21Z",
+  "generated_at": "2026-10-08T10:29:43Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.06.62"
+  "version": "2026.10.08.64"
 }
