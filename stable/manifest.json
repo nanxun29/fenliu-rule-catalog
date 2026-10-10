@@ -6756,11 +6756,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "0c0048377f33f07eaec38adfbcc84879390e8153d59f1f0b3c773c5ba50ee2ac",
-    "size": 196998
+    "sha256": "57ab0f012c8815bca4c6c71ce1500c642520c50c80ab78e3f8c652e7ef49a678",
+    "size": 196999
   },
-  "generated_at": "2026-10-08T10:29:43Z",
+  "generated_at": "2026-10-10T09:45:59Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.08.64"
+  "version": "2026.10.10.66"
 }
