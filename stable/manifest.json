@@ -5746,7 +5746,7 @@
       "category": "other",
       "cidr4": 0,
       "cidr6": 0,
-      "domains": 29,
+      "domains": 32,
       "icon": "icons/tiktok.png",
       "icon_sha256": "e421a9daf1ebd712bab3febecb1f93b765fbfc2b22d2c3b4231efe3203de2381",
       "id": "tiktok",
@@ -6756,11 +6756,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "7a13d8e506bde1c1694f099ef38a76765fff0764ed14eff8728787858c93f164",
-    "size": 197006
+    "sha256": "5af246281ed3383f9453ab34fb3177beaaf1b690ca56a4590ea69499aefd0279",
+    "size": 197005
   },
-  "generated_at": "2026-10-14T08:38:21Z",
+  "generated_at": "2026-10-16T08:06:18Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.14.70"
+  "version": "2026.10.16.72"
 }
