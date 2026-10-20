@@ -3717,7 +3717,7 @@
       "category": "other",
       "cidr4": 14,
       "cidr6": 4,
-      "domains": 122,
+      "domains": 124,
       "icon": "icons/lan.png",
       "icon_sha256": "95601f56725578276d49d101316d4b70a954abb64885b4cc9b780a79431f2c8c",
       "id": "lan",
@@ -6756,11 +6756,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "d5c0a042cb2288a3ef534113c937150b8c5d5a0bf2bee81bb6844d6a36e09082",
-    "size": 197013
+    "sha256": "5ea64afadbf0ab3dc1526beb7fee993acd005a830d8e0de9b1ca3d254defdd05",
+    "size": 197024
   },
-  "generated_at": "2026-10-18T07:59:00Z",
+  "generated_at": "2026-10-20T08:27:24Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.18.74"
+  "version": "2026.10.20.76"
 }
