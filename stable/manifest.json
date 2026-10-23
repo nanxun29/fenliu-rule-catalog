@@ -3464,6 +3464,8 @@
       "cidr4": 0,
       "cidr6": 0,
       "domains": 5,
+      "icon": "icons/jianguoyun.png",
+      "icon_sha256": "2e36dfae0690cc142e8a6314da62ddc7710239525c8458a1db30ccb91e53f47e",
       "id": "jianguoyun",
       "name": "坚果云",
       "source_name": "JianGuoYun"
@@ -6759,8 +6761,8 @@
     "sha256": "5ea64afadbf0ab3dc1526beb7fee993acd005a830d8e0de9b1ca3d254defdd05",
     "size": 197024
   },
-  "generated_at": "2026-10-20T08:27:24Z",
+  "generated_at": "2026-10-23T08:33:51Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.20.76"
+  "version": "2026.10.23.79"
 }
