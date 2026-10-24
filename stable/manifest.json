@@ -2617,9 +2617,9 @@
     },
     {
       "category": "other",
-      "cidr4": 46,
+      "cidr4": 58,
       "cidr6": 0,
-      "domains": 547,
+      "domains": 550,
       "icon": "icons/game.png",
       "icon_sha256": "d7cc195bcd8b516afcc2e24f12486f2edd8c102818b54dfca256f41c9060a9a3",
       "id": "game",
@@ -5397,9 +5397,9 @@
     },
     {
       "category": "other",
-      "cidr4": 0,
+      "cidr4": 12,
       "cidr6": 0,
-      "domains": 51,
+      "domains": 54,
       "icon": "icons/steam.png",
       "icon_sha256": "52338652b0991963cd93aa1812d695b0ea528b6e9076e8364d5ce062b7608d9c",
       "id": "steam",
@@ -6758,11 +6758,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "5ea64afadbf0ab3dc1526beb7fee993acd005a830d8e0de9b1ca3d254defdd05",
-    "size": 197024
+    "sha256": "e520ab2faa09bb5475e9df19051dba6f23d5b1a19ce3971de39075a5f04b5c3f",
+    "size": 197241
   },
-  "generated_at": "2026-10-23T08:33:51Z",
+  "generated_at": "2026-10-24T08:03:59Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.23.79"
+  "version": "2026.10.24.80"
 }
