@@ -4843,7 +4843,7 @@
       "category": "other",
       "cidr4": 89,
       "cidr6": 4,
-      "domains": 874,
+      "domains": 885,
       "id": "proxylite",
       "name": "ProxyLite",
       "source_name": "ProxyLite"
@@ -6758,11 +6758,11 @@
   ],
   "archive": {
     "file": "catalog.tar.gz",
-    "sha256": "e520ab2faa09bb5475e9df19051dba6f23d5b1a19ce3971de39075a5f04b5c3f",
-    "size": 197241
+    "sha256": "429e29e62f50dfb901f1b17fb600b55caefcd7b706bd09593afaf774ea8260bc",
+    "size": 197298
   },
-  "generated_at": "2026-10-24T08:03:59Z",
+  "generated_at": "2026-10-26T08:48:57Z",
   "min_plugin_version": "0.1.0-r13",
   "schema": 1,
-  "version": "2026.10.24.80"
+  "version": "2026.10.26.82"
 }
